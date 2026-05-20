@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 사제동행 힐링캠프 안내</title>
+    <title>2026 사제동행 힐링캠프 안내 및 신청</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         
@@ -24,6 +24,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
 
+        /* 헤더 배너 */
         .header {
             background-color: #E6ECE9; 
             padding: 35px 20px;
@@ -59,6 +60,7 @@
             margin-top: 12px;
         }
 
+        /* 인트로 문구 */
         .intro-text {
             text-align: center;
             font-size: 15px;
@@ -67,6 +69,7 @@
             word-break: keep-all;
         }
 
+        /* 섹션 타이틀 */
         h2 {
             font-size: 18px;
             color: #2C3E35;
@@ -84,6 +87,7 @@
             font-size: 16px;
         }
 
+        /* 캠프 안내 리스트 */
         .info-list {
             list-style: none;
             padding: 0;
@@ -115,6 +119,7 @@
             margin-top: 4px;
         }
 
+        /* 방문 장소 테이블 */
         .place-table {
             width: 100%;
             border-collapse: collapse;
@@ -143,6 +148,7 @@
             width: 35%;
         }
 
+        /* 체크리스트 */
         .checklist {
             background-color: #F9F9F7;
             padding: 20px;
@@ -168,7 +174,7 @@
             accent-color: #5A7365;
         }
 
-        /* 📋 참가 신청서 양식 스타일 */
+        /* 참가 신청서 폼 */
         .application-form {
             background-color: #F7F9F8;
             border: 1px solid #E6ECE9;
@@ -190,10 +196,6 @@
             margin-bottom: 15px;
         }
 
-        .form-group.short {
-            flex: 1;
-        }
-
         .form-group label {
             font-size: 14px;
             font-weight: 700;
@@ -211,7 +213,7 @@
             background-color: #fff;
             outline: none;
             box-sizing: border-box;
-            height: 44px; /* 높이 통일 */
+            height: 44px;
         }
 
         .form-group select {
@@ -224,7 +226,7 @@
             box-shadow: 0 0 4px rgba(90, 115, 101, 0.2);
         }
 
-        /* ✍️ 서명 패드 스타일 */
+        /* 서명 패드 */
         .signature-title {
             font-size: 14px;
             font-weight: 700;
@@ -261,6 +263,7 @@
             cursor: pointer;
         }
 
+        /* 제출 버튼 */
         .btn-submit-form {
             width: 100%;
             background-color: #5A7365;
@@ -274,7 +277,12 @@
             transition: background 0.2s;
         }
 
-        .btn-submit-form:hover {
+        .btn-submit-form:disabled {
+            background-color: #A3B5AC;
+            cursor: not-allowed;
+        }
+
+        .btn-submit-form:hover:not(:disabled) {
             background-color: #465A4E;
         }
 
@@ -375,7 +383,7 @@
         <form id="campForm" onsubmit="submitForm(event)">
             
             <div class="form-row-flex">
-                <div class="form-group short">
+                <div class="form-group">
                     <label for="grade">학년</label>
                     <select id="grade" required>
                         <option value="">선택</option>
@@ -384,17 +392,17 @@
                         <option value="3">3학년</option>
                     </select>
                 </div>
-                <div class="form-group short">
+                <div class="form-group">
                     <label for="classNum">반</label>
                     <select id="classNum" required>
                         <option value="">선택</option>
-                        </select>
+                    </select>
                 </div>
-                <div class="form-group short">
+                <div class="form-group">
                     <label for="studentNum">번호</label>
                     <select id="studentNum" required>
                         <option value="">선택</option>
-                        </select>
+                    </select>
                 </div>
             </div>
 
@@ -420,7 +428,7 @@
                 <canvas id="signaturePad"></canvas>
             </div>
 
-            <button type="submit" class="btn-submit-form">캠프 참가 신청서 제출하기</button>
+            <button type="submit" id="submitBtn" class="btn-submit-form">캠프 참가 신청서 제출하기</button>
         </form>
     </div>
 
@@ -431,36 +439,30 @@
 </div>
 
 <script>
-    // 반(1~11개) 및 번호(1~30개) 옵션 동적 생성
+    // ⚠️ 구글 시트 배너 작업 후 획득한 본인의 Google Web App URL 주소를 아래에 꼭 넣어주세요!
+    const GAS_WEB_APP_URL = '여기에_복사한_웹_앱_URL을_넣으세요';
+
+    // 반(1~11) 및 번호(1~30) 옵션 자동 생성 생성
     const classSelect = document.getElementById('classNum');
     for (let i = 1; i <= 11; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = i + '반';
-        classSelect.appendChild(opt);
+        let opt = document.createElement('option'); opt.value = i; opt.textContent = i + '반'; classSelect.appendChild(opt);
     }
-
     const numSelect = document.getElementById('studentNum');
     for (let i = 1; i <= 30; i++) {
-        let opt = document.createElement('option');
-        opt.value = i;
-        opt.textContent = i + '번';
-        numSelect.appendChild(opt);
+        let opt = document.createElement('option'); opt.value = i; opt.textContent = i + '번'; numSelect.appendChild(opt);
     }
 
-    // 캔버스(서명 패드) 설정
+    // 캔버스(서명 패드) 기능 제어 및 로직
     const canvas = document.getElementById('signaturePad');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
+    let isSigned = false; 
 
     function resizeCanvas() {
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = 150;
-        ctx.lineWidth = 3;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.strokeStyle = '#333333';
     }
-
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('load', resizeCanvas);
 
@@ -470,50 +472,74 @@
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         return { x: clientX - rect.left, y: clientY - rect.top };
     }
-
     function startDrawing(e) {
-        isDrawing = true;
-        const pos = getEventPos(e);
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
-        e.preventDefault();
+        isDrawing = true; isSigned = true;
+        const pos = getEventPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); e.preventDefault();
     }
-
     function draw(e) {
         if (!isDrawing) return;
-        const pos = getEventPos(e);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        e.preventDefault();
+        const pos = getEventPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault();
     }
-
-    function stopDrawing() {
-        isDrawing = false;
-    }
+    function stopDrawing() { isDrawing = false; }
 
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseleave', stopDrawing);
-
     canvas.addEventListener('touchstart', startDrawing);
     canvas.addEventListener('touchmove', draw);
     canvas.addEventListener('touchend', stopDrawing);
 
     function clearCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        isSigned = false;
     }
 
-    // 제출 시 팝업 안내
+    // 구글 스프레드시트 서버 전송 함수
     function submitForm(event) {
         event.preventDefault();
         
-        const grade = document.getElementById('grade').value;
-        const classNum = document.getElementById('classNum').value;
-        const studentNum = document.getElementById('studentNum').value;
-        const name = document.getElementById('studentName').value;
-        
-        alert(`✨ 캠프 신청이 완료되었습니다!\n\n[신청 학생 확인]\n${grade}학년 ${classNum}반 ${studentNum}번\n${name} 학생`);
+        if (!isSigned) {
+            alert('보호자 동의 서명을 마우스나 손가락으로 그려주세요.');
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '신청서를 전송하고 있습니다...';
+
+        const signatureData = canvas.toDataURL(); // 서명 영역을 base64 문자열로 변환
+
+        const formData = {
+            grade: document.getElementById('grade').value,
+            classNum: document.getElementById('classNum').value,
+            studentNum: document.getElementById('studentNum').value,
+            studentName: document.getElementById('studentName').value,
+            studentPhone: document.getElementById('studentPhone').value,
+            parentPhone: document.getElementById('parentPhone').value,
+            signature: signatureData
+        };
+
+        // 구글 웹 앱 주소로 크로스 오리진 요청 전송
+        fetch(GAS_WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors', 
+            cache: 'no-cache',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            alert(`✨ 캠프 참가 신청서가 정상적으로 접수되었습니다.\n구글 스프레드시트에서 실시간 등록 내역을 확인하세요!`);
+            document.getElementById('campForm').reset();
+            clearCanvas();
+        })
+        .catch(error => {
+            alert('제출 도중 에러가 발생했습니다. 다시 시도해 주세요: ' + error);
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '캠프 참가 신청서 제출하기';
+        });
     }
 </script>
 
